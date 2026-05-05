@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BIA Energy — Panel de Gestión</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --primary:      #472bef;
+      --primary-light:#9d8ef5;
+      --primary-dark: #3922bf;
+      --teal:         #08DDBC;
+      --teal-light:   #d0faf5;
+      --bg:           #f5f4ff;
+      --card:         #ffffff;
+      --text:         #20222e;
+      --muted:        #6d7193;
+      --border:       #cecfdb;
+      --disabled:     #dbdce9;
+      --success:      #10B981;
+      --error:        #EF4444;
+      --warning:      #F59E0B;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--text);
+      color: white;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      box-shadow: 0 4px 24px rgba(32,34,46,0.25);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .logo-text strong {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #ffffff;
+    }
+
+    .logo-text span {
+      font-size: 11px;
+      color: var(--teal);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .health-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .health-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--disabled);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .health-dot.ok    { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+    .health-dot.error { background: #f87171; }
+
+    .version-tag {
+      font-size: 11px;
+      color: var(--primary-light);
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    /* ── NAV TABS ── */
+    nav {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .tab:hover { color: var(--primary); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .tab .count {
+      background: #ede9fe;
+      color: var(--primary);
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+    }
+
+    .tab.active .count {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* ── MAIN ── */
+    main { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STATS ROW ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(32,34,46,0.06);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 6px 20px rgba(71,43,239,0.12);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      background: #f0eeff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-icon svg { width: 22px; height: 22px; }
+
+    .stat-info .value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-info .value.teal { color: var(--teal); }
+
+    .stat-info .label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      width: 260px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(71,43,239,0.08);
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      width: 100%;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .search-box input::placeholder { color: var(--muted); }
+
+    .search-icon { color: var(--muted); flex-shrink: 0; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 14px rgba(71,43,239,0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 6px 20px rgba(71,43,239,0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: white;
+      color: var(--primary);
+      border: 1.5px solid #ddd6fe;
+    }
+
+    .btn-ghost:hover { background: #f0eeff; }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(32,34,46,0.06);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead { background: #fafafe; }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f5f4ff;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9ff; }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .cell-name { display: flex; align-items: center; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-teal   { background: var(--teal-light); color: #0a7a6a; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center;
+      padding: 56px 20px;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #ede9fe;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p { font-size: 13px; }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 56px 20px;
+      color: var(--muted);
+    }
+
+    .empty svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+    .empty p { font-size: 13px; }
+
+    /* ── ERROR BANNER ── */
+    .error-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: #fee2e2;
+      border-left: 4px solid var(--error);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #991b1b;
+    }
+
+    .error-banner.show { display: flex; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(32,34,46,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 24px 60px rgba(32,34,46,0.25);
+      overflow: hidden;
+      animation: modalIn 0.25s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      background: var(--text);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-header-left svg { color: var(--teal); }
+
+    .modal-header h3 { font-size: 15px; font-weight: 700; }
+
+    .modal-close {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: white;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover { background: rgba(255,255,255,0.2); }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(71,43,239,0.08);
+    }
+
+    .modal-footer {
+      padding: 0 24px 24px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(32,34,46,0.2);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 200;
+      border-left: 3px solid var(--teal);
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    .toast-icon { color: var(--teal); font-size: 16px; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px 32px;
+      font-size: 11px;
+      color: var(--disabled);
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    footer span { color: var(--teal); font-weight: 600; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      nav { padding: 0 16px; overflow-x: auto; }
+      main { padding: 20px 16px; }
+      .search-box { width: 100%; }
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(4), td:nth-child(4) { display: none; }
+      .version-tag { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M47.3454 34.9173H64.3074C66.2762 34.9173 68.0936 36.3248 68.6993 38.2015C69.4566 40.2346 69.0022 42.424 67.4878 43.8316L28.7175 78.8629C26.9001 80.2704 24.477 80.4268 22.6596 79.0193C20.8423 77.7682 20.085 75.2659 20.9937 73.0765L32.6551 44.9263H15.6931C13.7243 44.9263 11.9069 43.6752 11.3011 41.7985C10.5439 39.7654 10.9982 37.576 12.5127 36.1684L51.283 1.13708C53.1004 -0.270431 55.5235 -0.426821 57.3409 0.980689C59.1582 2.23181 59.9154 4.73405 59.0068 6.92351L47.3454 34.9173Z" fill="#08DDBC"/>
+      </svg>
+      <div class="logo-text">
+        <strong>BIA Energy</strong>
+        <span>Panel de Gestión</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <span class="version-tag">v1.0 · Reto Frontend</span>
+      <div class="health-badge">
+        <div class="health-dot" id="healthDot"></div>
+        <span id="healthText">Verificando...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav>
+    <div class="tab active" onclick="switchTab('usuarios', this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Usuarios <span class="count" id="countUsuarios">0</span>
+    </div>
+    <div class="tab" onclick="switchTab('clientes', this)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Clientes <span class="count" id="countClientes">0</span>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- ── USUARIOS ── -->
+    <div class="section active" id="section-usuarios">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Usuarios</div>
+          <div class="section-subtitle">Gestión de cuentas del sistema</div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#472bef" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="value" id="statUsuarios">—</div>
+            <div class="label">Usuarios registrados</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d0faf5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#08DDBC" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="value teal" id="statServidor">—</div>
+            <div class="label">Estado del servidor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-banner" id="errorUsuarios">
+        ⚠️ <span id="errorUsuariosMsg">Error cargando usuarios</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchUsuarios" placeholder="Buscar usuario..." oninput="filtrarUsuarios()"/>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo usuario
+        </button>
+      </div>
+
+      <div class="table-card">
+        <div id="loadingUsuarios" class="loading">
+          <div class="spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
+        <div id="emptyUsuarios" class="empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <p>No hay usuarios registrados aún.</p>
+        </div>
+        <table id="tablaUsuarios" style="display:none">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Registrado</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="bodyUsuarios"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CLIENTES ── -->
+    <div class="section" id="section-clientes">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Clientes</div>
+          <div class="section-subtitle">Directorio de clientes vinculados</div>
+        </div>
+        <button class="btn btn-ghost" onclick="cargarClientes()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Recargar
+        </button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#472bef" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="value" id="statClientes">—</div>
+            <div class="label">Clientes registrados</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d0faf5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#08DDBC" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="value teal" id="statConVinculo">—</div>
+            <div class="label">Con usuario vinculado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-banner" id="errorClientes">
+        ⚠️ <span id="errorClientesMsg">Error cargando clientes</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchClientes" placeholder="Buscar cliente..." oninput="filtrarClientes()"/>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div id="loadingClientes" class="loading">
+          <div class="spinner"></div>
+          <p>Cargando clientes...</p>
+        </div>
+        <div id="emptyClientes" class="empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          <p>No hay clientes registrados aún.</p>
+        </div>
+        <table id="tablaClientes" style="display:none">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+            </tr>
+          </thead>
+          <tbody id="bodyClientes"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    Construido con <span>BIA Energy Design System</span> · Reto 3: Dale cara a tu API
+  </footer>
+
+  <!-- MODAL CREAR USUARIO -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <svg width="18" height="18" viewBox="0 0 80 80" fill="none"><path d="M47.3454 34.9173H64.3074C66.2762 34.9173 68.0936 36.3248 68.6993 38.2015C69.4566 40.2346 69.0022 42.424 67.4878 43.8316L28.7175 78.8629C26.9001 80.2704 24.477 80.4268 22.6596 79.0193C20.8423 77.7682 20.085 75.2659 20.9937 73.0765L32.6551 44.9263H15.6931C13.7243 44.9263 11.9069 43.6752 11.3011 41.7985C10.5439 39.7654 10.9982 37.576 12.5127 36.1684L51.283 1.13708C53.1004 -0.270431 55.5235 -0.426821 57.3409 0.980689C59.1582 2.23181 59.9154 4.73405 59.0068 6.92351L47.3454 34.9173Z" fill="#08DDBC"/></svg>
+          <h3>Nuevo Usuario</h3>
+        </div>
+        <button class="modal-close" onclick="cerrarModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="inputNombre" placeholder="Ej: Damaris Castañeda"/>
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="inputEmail" placeholder="correo@bia.app"/>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="inputPassword" placeholder="Mínimo 6 caracteres"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="crearUsuario()" id="btnCrear">Crear usuario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✦</span>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+    let todosUsuarios = [];
+    let todosClientes = [];
+
+    // ── INIT ──
+    document.addEventListener('DOMContentLoaded', () => {
+      checkHealth();
+      cargarUsuarios();
+      cargarClientes();
+    });
+
+    // ── HEALTH CHECK ──
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API}/health`);
+        const data = await res.json();
+        if (data.status === 'ok') {
+          document.getElementById('healthDot').className = 'health-dot ok';
+          document.getElementById('healthText').textContent = 'API activa';
+          document.getElementById('statServidor').textContent = 'Activo';
+        }
+      } catch {
+        document.getElementById('healthDot').className = 'health-dot error';
+        document.getElementById('healthText').textContent = 'Sin conexión';
+        document.getElementById('statServidor').textContent = 'Error';
+        document.getElementById('statServidor').style.color = '#EF4444';
+      }
+    }
+
+    // ── TABS ──
+    function switchTab(tab, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(`section-${tab}`).classList.add('active');
+    }
+
+    // ── USUARIOS ──
+    async function cargarUsuarios() {
+      const loading = document.getElementById('loadingUsuarios');
+      const tabla   = document.getElementById('tablaUsuarios');
+      const empty   = document.getElementById('emptyUsuarios');
+      const errBanner = document.getElementById('errorUsuarios');
+
+      loading.style.display = 'block';
+      tabla.style.display = 'none';
+      empty.style.display = 'none';
+      errBanner.classList.remove('show');
+
+      try {
+        const res = await fetch(`${API}/api/usuarios`);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        todosUsuarios = await res.json();
+
+        document.getElementById('statUsuarios').textContent = todosUsuarios.length;
+        document.getElementById('countUsuarios').textContent = todosUsuarios.length;
+        renderUsuarios(todosUsuarios);
+      } catch (err) {
+        document.getElementById('errorUsuariosMsg').textContent = `No se pudo conectar con la API: ${err.message}`;
+        errBanner.classList.add('show');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function renderUsuarios(lista) {
+      const body  = document.getElementById('bodyUsuarios');
+      const tabla = document.getElementById('tablaUsuarios');
+      const empty = document.getElementById('emptyUsuarios');
+
+      if (lista.length === 0) {
+        empty.style.display = 'block';
+        tabla.style.display = 'none';
+        return;
+      }
+
+      body.innerHTML = lista.map(u => `
+        <tr>
+          <td>
+            <div class="cell-name">
+              <div class="avatar">${iniciales(u.nombre)}</div>
+              <strong>${u.nombre}</strong>
+            </div>
+          </td>
+          <td style="color:var(--muted)">${u.email}</td>
+          <td style="color:var(--muted)">${formatDate(u.creado_en)}</td>
+          <td><span class="badge badge-teal">● Activo</span></td>
+        </tr>
+      `).join('');
+
+      tabla.style.display = 'table';
+      empty.style.display = 'none';
+    }
+
+    function filtrarUsuarios() {
+      const q = document.getElementById('searchUsuarios').value.toLowerCase();
+      renderUsuarios(todosUsuarios.filter(u =>
+        u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+      ));
+    }
+
+    // ── CLIENTES ──
+    async function cargarClientes() {
+      const loading = document.getElementById('loadingClientes');
+      const tabla   = document.getElementById('tablaClientes');
+      const empty   = document.getElementById('emptyClientes');
+      const errBanner = document.getElementById('errorClientes');
+
+      loading.style.display = 'block';
+      tabla.style.display = 'none';
+      empty.style.display = 'none';
+      errBanner.classList.remove('show');
+
+      try {
+        const res = await fetch(`${API}/api/clientes`);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        todosClientes = await res.json();
+
+        document.getElementById('statClientes').textContent = todosClientes.length;
+        document.getElementById('countClientes').textContent = todosClientes.length;
+        const conVinculo = todosClientes.filter(c => c.usuario_id).length;
+        document.getElementById('statConVinculo').textContent = conVinculo;
+        renderClientes(todosClientes);
+      } catch (err) {
+        document.getElementById('errorClientesMsg').textContent = `No se pudo conectar con la API: ${err.message}`;
+        errBanner.classList.add('show');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function renderClientes(lista) {
+      const body  = document.getElementById('bodyClientes');
+      const tabla = document.getElementById('tablaClientes');
+      const empty = document.getElementById('emptyClientes');
+
+      if (lista.length === 0) {
+        empty.style.display = 'block';
+        tabla.style.display = 'none';
+        return;
+      }
+
+      body.innerHTML = lista.map(c => `
+        <tr>
+          <td>
+            <div class="cell-name">
+              <div class="avatar" style="background:linear-gradient(135deg,#08DDBC,#472bef)">${iniciales(c.nombre)}</div>
+              <strong>${c.nombre}</strong>
+            </div>
+          </td>
+          <td style="color:var(--muted)">${c.email}</td>
+          <td style="color:var(--muted)">${c.telefono || '<span style="color:var(--disabled)">—</span>'}</td>
+          <td style="color:var(--muted)">${c.direccion || '<span style="color:var(--disabled)">—</span>'}</td>
+        </tr>
+      `).join('');
+
+      tabla.style.display = 'table';
+      empty.style.display = 'none';
+    }
+
+    function filtrarClientes() {
+      const q = document.getElementById('searchClientes').value.toLowerCase();
+      renderClientes(todosClientes.filter(c =>
+        c.nombre.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+      ));
+    }
+
+    // ── CREAR USUARIO ──
+    function abrirModal() {
+      document.getElementById('modalOverlay').classList.add('show');
+      setTimeout(() => document.getElementById('inputNombre').focus(), 100);
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+      ['inputNombre','inputEmail','inputPassword'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    }
+
+    async function crearUsuario() {
+      const nombre   = document.getElementById('inputNombre').value.trim();
+      const email    = document.getElementById('inputEmail').value.trim();
+      const password = document.getElementById('inputPassword').value.trim();
+
+      if (!nombre || !email || !password) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      const btn = document.getElementById('btnCrear');
+      btn.textContent = 'Creando...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API}/api/usuarios`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, password })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.mensaje || `Error ${res.status}`);
+        }
+
+        cerrarModal();
+        mostrarToast('Usuario creado exitosamente');
+        await cargarUsuarios();
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      } finally {
+        btn.textContent = 'Crear usuario';
+        btn.disabled = false;
+      }
+    }
+
+    // ── UTILS ──
+    function iniciales(nombre) {
+      return (nombre || '?').split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      return new Date(dateStr).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function mostrarToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) cerrarModal();
+    });
+  </script>
+</body>
+</html>
